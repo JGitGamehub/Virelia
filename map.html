@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Virelia Interactive Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Unica+One&family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #f3efdc;
+      font-family: 'Rubik', sans-serif;
+      cursor: default;
+    }
+    .map-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .map-wrapper {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    .map-image {
+      width: 100%;
+      height: auto;
+    }
+    .hotspot-wrapper {
+      position: absolute;
+      z-index: 2;
+      pointer-events: auto;
+    }
+    .hotspot {
+      width: 30px;
+      height: 30px;
+      background-color: #ffffff;
+      border: 2px solid #000000;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s;
+      z-index: 3;
+      position: relative;
+    }
+    .hotspot.yellow {
+      width: 15px;
+      height: 15px;
+      background-color: yellow;
+      border: 2px solid #000000;
+    }
+    .hotspot:hover {
+      transform: scale(1.4);
+      z-index: 4;
+    }
+    .info-box {
+      position: absolute;
+      background: rgba(253, 248, 230, 0.97) url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+      border: 2px solid #a1864c;
+      border-radius: 12px;
+      padding: 12px;
+      width: 220px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.3s ease;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      font-size: 14px;
+      line-height: 1.4;
+      color: #3a2e1f;
+      z-index: 9999;
+      transform: translate(0, 0);
+    }
+    .hotspot-wrapper:hover .info-box {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .hotspot-wrapper.farming .info-box,
+    .hotspot-wrapper.medical .info-box,
+    .hotspot-wrapper.mentrai .info-box,
+    .hotspot-wrapper.council .info-box,
+    .hotspot-wrapper.fishing .info-box,
+    .hotspot-wrapper.shipwreck .info-box,
+    .hotspot-wrapper.cliffs .info-box {
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .info-box strong {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 700;
+      font-size: 18px;
+      font-family: 'Unica One', cursive;
+      color: #5a3d1e;
+    }
+    .typing-box {
+      overflow: hidden;
+      white-space: nowrap;
+      display: inline-block;
+      font-family: 'Rubik', sans-serif;
+      font-size: 14px;
+      border-right: 2px solid #5a3d1e;
+      width: 0;
+      animation: typing 6s steps(60, end) forwards, blink-caret 0.75s step-end infinite;
+      max-width: 100%;
+    }
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 50ch }
+    }
+    @keyframes blink-caret {
+      from, to { border-color: transparent }
+      50% { border-color: #5a3d1e; }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    .hotspot-wrapper:hover .hotspot {
+      animation: pulse 1s ease-in-out infinite;
+    }
+    .avatar {
+      position: absolute;
+      width: 70px;
+      height: auto;
+      top: 43%;
+      left: 43%;
+      cursor: pointer;
+      z-index: 3;
+      transition: transform 0.3s ease;
+    }
+    .avatar:hover {
+      transform: scale(1.2);
+    }
+    #avatar-popup {
+      position: absolute;
+      top: 28%;
+      left: 47%;
+      background: rgba(253, 248, 230, 0.97) url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+      border: 2px solid #a1864c;
+      border-radius: 12px;
+      padding: 12px;
+      width: 250px;
+      font-size: 14px;
+      color: #3a2e1f;
+      font-family: 'Rubik', sans-serif;
+      display: none;
+      z-index: 10000;
+    }
+    .night-mode {
+      filter: brightness(0.6);
+    }
+    .toggle-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #5a3d1e;
+      color: white;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 10000;
+      font-family: 'Unica One', cursive;
+      font-size: 16px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transition: background 0.3s ease;
+    }
+    .toggle-btn:hover {
+      background-color: #7b5529;
+    }
+  </style>
+</head>
+<body>
+  <audio autoplay loop>
+    <source src="sounds.mp3" type="audio/mpeg">
+  </audio>
+
+  <button class="toggle-btn" onclick="toggleDayNight()">Toggle Day/Night</button>
+
+  <div class="map-container">
+    <div class="map-wrapper">
+      <img src="Virelia Map.png" alt="Virelia Map - Zoomed Out" class="map-image" id="mapImage">
+
+      <img src="https://cdn-icons-png.flaticon.com/512/3188/3188890.png" class="avatar" id="avatar" title="Selenar Council Leader" />
+      <div id="avatar-popup">
+        <strong>Selenar Jedediah:</strong>
+        <div class="typing-box">“Welcome, wanderer. This land is Virelia - rebuilt from ruin. Choose wisely how you walk it.”</div>
+      </div>
+
+      <div class="hotspot-wrapper farming" style="top: 20%; left: 18%;">
+        <div class="hotspot"></div>
+        <div class="info-box"><strong>Farming Zone:</strong> Fertile land where crops are cultivated by trained farmers and learners.</div>
+      </div>
+
+      <div class="hotspot-wrapper medical" style="top: 65%; left: 70%;">
+        <div class="hotspot"></div>
+        <div class="info-box"><strong>Medical Shelter:</strong> A healing hut where doctors and medari care for the sick and wounded.</div>
+      </div>
+
+      <!-- Moved EAST more and a bit SOUTH -->
+      <div class="hotspot-wrapper mentrai" style="top: 50%; left: 70%;">
+        <div class="hotspot"></div>
+        <div class="info-box"><strong>Mentrai Training Grounds:</strong> Where Mentrai guide students through apprenticeships.</div>
+      </div>
+
+      <div class="hotspot-wrapper council" style="top: 38%; left: 49%;">
+        <div class="hotspot"></div>
+        <div class="info-box"><strong>Council Gathering Circle:</strong> The meeting place of the Selenair. All voices are welcome here.</div>
+      </div>
+
+      <div class="hotspot-wrapper fishing" style="top: 86%; left: 30%;">
+        <div class="hotspot"></div>
+        <div class="info-box"><strong>Fishing Docks:</strong> Daily fishers gather here with nets and baskets to feed the people.</div>
+      </div>
+
+      <div class="hotspot-wrapper shipwreck" style="top: 74%; left: 10%;">
+        <div class="hotspot"></div>
+        <div class="info-box"><strong>Shipwreck:</strong> The broken hull of the Arclight remains as a reminder of our arrival.</div>
+      </div>
+
+      <div class="hotspot-wrapper cliffs" style="top: 9%; left: 73%;">
+        <div class="hotspot yellow"></div>
+        <div class="info-box"><strong>The Cliffs:</strong> High jagged stone walls rise above the sea. Some say they whisper when the wind howls.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const mapImage = document.getElementById('mapImage');
+    const avatar = document.getElementById('avatar');
+    const avatarPopup = document.getElementById('avatar-popup');
+
+    avatar.addEventListener('click', () => {
+      if (avatarPopup.style.display === 'block') {
+        avatarPopup.style.display = 'none';
+      } else {
+        avatarPopup.style.display = 'block';
+        const typingBox = avatarPopup.querySelector('.typing-box');
+        typingBox.style.animation = 'none';
+        void typingBox.offsetWidth;
+        typingBox.style.animation = 'typing 6s steps(60, end) forwards, blink-caret 0.75s step-end infinite';
+      }
+    });
+
+    function toggleDayNight() {
+      mapImage.classList.toggle('night-mode');
+    }
+  </script>
+</body>
+</html>
