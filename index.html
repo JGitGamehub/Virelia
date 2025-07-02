@@ -27,13 +27,18 @@
       position: relative;
     }
     .map-image {
+      position: absolute;
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.6s ease;
     }
     .hotspot-wrapper {
       position: absolute;
       z-index: 2;
       pointer-events: auto;
+      top: var(--y);
+      left: var(--x);
     }
     .hotspot {
       width: 30px;
@@ -77,13 +82,7 @@
       opacity: 1;
       pointer-events: auto;
     }
-    .hotspot-wrapper.farming .info-box,
-    .hotspot-wrapper.medical .info-box,
-    .hotspot-wrapper.mentrai .info-box,
-    .hotspot-wrapper.council .info-box,
-    .hotspot-wrapper.fishing .info-box,
-    .hotspot-wrapper.shipwreck .info-box,
-    .hotspot-wrapper.cliffs .info-box {
+    .hotspot-wrapper .info-box {
       bottom: 40px;
       left: 50%;
       transform: translateX(-50%);
@@ -127,8 +126,8 @@
       position: absolute;
       width: 70px;
       height: auto;
-      top: 43%;
-      left: 43%;
+      top: var(--y);
+      left: var(--x);
       cursor: pointer;
       z-index: 3;
       transition: transform 0.3s ease;
@@ -138,8 +137,8 @@
     }
     #avatar-popup {
       position: absolute;
-      top: 28%;
-      left: 47%;
+      top: calc(var(--y) - 100px);
+      left: calc(var(--x) + 20px);
       background: rgba(253, 248, 230, 0.97) url('https://www.transparenttextures.com/patterns/wood-pattern.png');
       border: 2px solid #a1864c;
       border-radius: 12px;
@@ -150,9 +149,6 @@
       font-family: 'Rubik', sans-serif;
       display: none;
       z-index: 10000;
-    }
-    .night-mode {
-      filter: brightness(0.6);
     }
     .toggle-btn {
       position: absolute;
@@ -175,6 +171,16 @@
     .toggle-btn:hover {
       background-color: #7b5529;
     }
+    /* Avatar moved near left edge */
+    .avatar {
+      top: 250px !important;
+      left: 20px !important;
+      position: fixed !important;
+    }
+    #avatar-popup {
+      top: 150px !important;
+      left: 40px !important;
+    }
   </style>
 </head>
 <body>
@@ -186,46 +192,50 @@
 
   <div class="map-container">
     <div class="map-wrapper">
-      <img src="Virelia Map.png" alt="Virelia Map - Zoomed Out" class="map-image" id="mapImage">
+      <img src="Virelia Map.png" alt="Virelia Map" class="map-image" id="mapImage">
 
-      <img src="https://cdn-icons-png.flaticon.com/512/3188/3188890.png" class="avatar" id="avatar" title="Selenar Council Leader" />
+      <img src="https://cdn-icons-png.flaticon.com/512/3188/3188890.png" 
+           class="avatar" 
+           id="avatar" 
+           title="Selenar Council Leader" 
+           style="--x: 620px; --y: 250px;" />
+
       <div id="avatar-popup">
         <strong>Selenar Jedediah:</strong>
-        <div class="typing-box">“Welcome, wanderer. This land is Virelia - rebuilt from ruin. Choose wisely how you walk it.”</div>
+        <div class="typing-box">“Welcome, wanderer. This land is Virelia.”</div>
       </div>
 
-      <div class="hotspot-wrapper farming" style="top: 20%; left: 18%;">
+      <div class="hotspot-wrapper farming" style="--x: 200px; --y: 250px;">
         <div class="hotspot"></div>
         <div class="info-box"><strong>Farming Zone:</strong> Fertile land where crops are cultivated by trained farmers and learners.</div>
       </div>
 
-      <div class="hotspot-wrapper medical" style="top: 65%; left: 70%;">
+      <div class="hotspot-wrapper medical" style="--x: 1100px; --y: 670px;">
         <div class="hotspot"></div>
         <div class="info-box"><strong>Medical Shelter:</strong> A healing hut where doctors and medari care for the sick and wounded.</div>
       </div>
 
-      <!-- Moved EAST more and a bit SOUTH -->
-      <div class="hotspot-wrapper mentrai" style="top: 50%; left: 70%;">
+      <div class="hotspot-wrapper mentrai" style="--x: 1040px; --y: 430px;">
         <div class="hotspot"></div>
         <div class="info-box"><strong>Mentrai Training Grounds:</strong> Where Mentrai guide students through apprenticeships.</div>
       </div>
 
-      <div class="hotspot-wrapper council" style="top: 38%; left: 49%;">
+      <div class="hotspot-wrapper council" style="--x: 1000px; --y: 180px;">
         <div class="hotspot"></div>
         <div class="info-box"><strong>Council Gathering Circle:</strong> The meeting place of the Selenair. All voices are welcome here.</div>
       </div>
 
-      <div class="hotspot-wrapper fishing" style="top: 86%; left: 30%;">
+      <div class="hotspot-wrapper fishing" style="--x: 420px; --y: 880px;">
         <div class="hotspot"></div>
         <div class="info-box"><strong>Fishing Docks:</strong> Daily fishers gather here with nets and baskets to feed the people.</div>
       </div>
 
-      <div class="hotspot-wrapper shipwreck" style="top: 74%; left: 10%;">
+      <div class="hotspot-wrapper shipwreck" style="--x: 140px; --y: 760px;">
         <div class="hotspot"></div>
         <div class="info-box"><strong>Shipwreck:</strong> The broken hull of the Arclight remains as a reminder of our arrival.</div>
       </div>
 
-      <div class="hotspot-wrapper cliffs" style="top: 9%; left: 73%;">
+      <div class="hotspot-wrapper cliffs" style="--x: 1570px; --y: 300px;">
         <div class="hotspot yellow"></div>
         <div class="info-box"><strong>The Cliffs:</strong> High jagged stone walls rise above the sea. Some say they whisper when the wind howls.</div>
       </div>
@@ -237,20 +247,19 @@
     const avatar = document.getElementById('avatar');
     const avatarPopup = document.getElementById('avatar-popup');
 
+    let isNight = false;
+
     avatar.addEventListener('click', () => {
-      if (avatarPopup.style.display === 'block') {
-        avatarPopup.style.display = 'none';
-      } else {
-        avatarPopup.style.display = 'block';
-        const typingBox = avatarPopup.querySelector('.typing-box');
-        typingBox.style.animation = 'none';
-        void typingBox.offsetWidth;
-        typingBox.style.animation = 'typing 6s steps(60, end) forwards, blink-caret 0.75s step-end infinite';
-      }
+      avatarPopup.style.display = avatarPopup.style.display === 'block' ? 'none' : 'block';
+      const typingBox = avatarPopup.querySelector('.typing-box');
+      typingBox.style.animation = 'none';
+      void typingBox.offsetWidth;
+      typingBox.style.animation = 'typing 6s steps(60, end) forwards, blink-caret 0.75s step-end infinite';
     });
 
     function toggleDayNight() {
-      mapImage.classList.toggle('night-mode');
+      isNight = !isNight;
+      mapImage.src = isNight ? 'Night Image.png' : 'Virelia Map.png';
     }
   </script>
 </body>
